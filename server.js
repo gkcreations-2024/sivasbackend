@@ -39,6 +39,7 @@ app.post('/send-email', upload.single('pdf'), async (req, res) => {
             from: 'Sivas Pyro Paradise <orders@sivaspyroparadise.com>',  // later own domain verify panna maathunga
             to: customerEmail,
             bcc: process.env.EMAIL,
+            cc:'sivaspyroparadise2026@gmail.com',
             subject: 'Order Confirmation',
             text: 'Please find attached your order confirmation.',
             attachments: [
