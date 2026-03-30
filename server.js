@@ -37,6 +37,15 @@ const orderSchema = new mongoose.Schema({
 
 const Order = mongoose.model("Order", orderSchema);
 
+const counterSchema = new mongoose.Schema({
+  name: String,
+  seq: {
+    type: Number,
+    default: 0
+  }
+});
+
+const Counter = mongoose.model("Counter", counterSchema);
 // const transporter = nodemailer.createTransport({
 //     service: 'gmail',
 //     auth: {
@@ -45,27 +54,37 @@ const Order = mongoose.model("Order", orderSchema);
 //     }
 // });
 app.post("/place-order", async (req, res) => {
-    console.log("🔥 /place-order API called");
+  console.log("🔥 /place-order API called");
+
   try {
     const { customerDetails, cartDetails, totalAmount } = req.body;
 
+    // 🔥 Get next sequence number
+    const counter = await Counter.findOneAndUpdate(
+      { name: "order" },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    );
+
+    const sequenceNumber = counter.seq;
+
+    // 🔥 Format: SPP-001
+    const billNo = "SPP-" + String(sequenceNumber).padStart(3, "0");
+
+    console.log("✅ Generated BillNo:", billNo);
+
     const newOrder = new Order({
+      billNo,
       customerDetails,
       cartDetails,
       totalAmount
     });
 
-    const savedOrder = await newOrder.save();
-
-    const billNo = "SPP-" + savedOrder._id.toString().slice(-6).toUpperCase();
-    console.log("✅ Generated BillNo:", billNo);
-
-    savedOrder.billNo = billNo;
-    await savedOrder.save();
+    await newOrder.save();
 
     res.json({
       success: true,
-      billNo: billNo
+      billNo
     });
 
   } catch (err) {
