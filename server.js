@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require("mongoose");
 const multer = require('multer');
 // const nodemailer = require('nodemailer');
 const { Resend } = require('resend');
@@ -8,15 +9,36 @@ require('dotenv').config();
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() }); // Use in-memory storage
 
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+.then(() => console.log("MongoDB Connected ✅"))
+.catch(err => console.log(err));
+
 // Enable CORS for all origins
 app.use(cors());
 
 // For parsing application/json
 app.use(express.json());
 
+
 // For parsing application/x-www-form-urlencoded
 app.use(express.urlencoded({ extended: true }));
 const resend = new Resend(process.env.RESEND_API_KEY);
+
+const orderSchema = new mongoose.Schema({
+  billNo: String,
+  customerDetails: Object,
+  cartDetails: Array,
+  totalAmount: Number,
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+const Order = mongoose.model("Order", orderSchema);
 
 // const transporter = nodemailer.createTransport({
 //     service: 'gmail',
@@ -29,27 +51,27 @@ app.post("/place-order", async (req, res) => {
   try {
     const { customerDetails, cartDetails, totalAmount } = req.body;
 
-    // 🔥 Bill Number generate
-    const today = new Date();
-    const billNo = `SPP-${today.getFullYear()}${String(today.getMonth()+1).padStart(2,"0")}${String(today.getDate()).padStart(2,"0")}-${Math.floor(100+Math.random()*900)}`;
-
     const newOrder = new Order({
-      billNo,
       customerDetails,
       cartDetails,
       totalAmount
     });
 
-    await newOrder.save();
+    const savedOrder = await newOrder.save();
+
+    const billNo = "SPP-" + savedOrder._id.toString().slice(-6).toUpperCase();
+
+    savedOrder.billNo = billNo;
+    await savedOrder.save();
 
     res.json({
       success: true,
-      billNo
+      billNo: billNo
     });
 
   } catch (err) {
     console.log(err);
-    res.json({ success: false });
+    res.status(500).json({ success: false });
   }
 });
 app.post('/send-email', upload.single('pdf'), async (req, res) => {
