@@ -97,7 +97,7 @@ app.post('/send-email', upload.single('pdf'), async (req, res) => {
         });
 
         console.log("Email sent:", data);
-        res.json({ success: true });
+        res.json({ success: true, billNo: "sent" });
     } catch (error) {
         console.error("Error sending email:", error);
         res.status(500).json({ success: false, message: 'Error sending email' });
