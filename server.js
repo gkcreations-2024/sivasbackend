@@ -45,6 +45,7 @@ const Order = mongoose.model("Order", orderSchema);
 //     }
 // });
 app.post("/place-order", async (req, res) => {
+    console.log("🔥 /place-order API called");
   try {
     const { customerDetails, cartDetails, totalAmount } = req.body;
 
@@ -58,7 +59,7 @@ app.post("/place-order", async (req, res) => {
 
     const billNo = "SPP-" + savedOrder._id.toString().slice(-6).toUpperCase();
     console.log("✅ Generated BillNo:", billNo);
-    
+
     savedOrder.billNo = billNo;
     await savedOrder.save();
 
