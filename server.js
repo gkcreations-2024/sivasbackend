@@ -25,7 +25,33 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 //         pass: process.env.PASSWORD
 //     }
 // });
+app.post("/place-order", async (req, res) => {
+  try {
+    const { customerDetails, cartDetails, totalAmount } = req.body;
 
+    // 🔥 Bill Number generate
+    const today = new Date();
+    const billNo = `SPP-${today.getFullYear()}${String(today.getMonth()+1).padStart(2,"0")}${String(today.getDate()).padStart(2,"0")}-${Math.floor(100+Math.random()*900)}`;
+
+    const newOrder = new Order({
+      billNo,
+      customerDetails,
+      cartDetails,
+      totalAmount
+    });
+
+    await newOrder.save();
+
+    res.json({
+      success: true,
+      billNo
+    });
+
+  } catch (err) {
+    console.log(err);
+    res.json({ success: false });
+  }
+});
 app.post('/send-email', upload.single('pdf'), async (req, res) => {
     const customerEmail = req.body.customerEmail;
     const pdf = req.file;
