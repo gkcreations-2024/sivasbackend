@@ -57,7 +57,8 @@ app.post("/place-order", async (req, res) => {
     const savedOrder = await newOrder.save();
 
     const billNo = "SPP-" + savedOrder._id.toString().slice(-6).toUpperCase();
-
+    console.log("✅ Generated BillNo:", billNo);
+    
     savedOrder.billNo = billNo;
     await savedOrder.save();
 
@@ -107,4 +108,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
-console.log("Generated BillNo:", billNo);
